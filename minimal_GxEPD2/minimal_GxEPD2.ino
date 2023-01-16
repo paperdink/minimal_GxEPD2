@@ -33,9 +33,12 @@ void setup()
     Serial.println("setup");
     delay(100);
     pinMode(EPD_EN, OUTPUT);
+    pinMode(EPD_RST, OUTPUT);
+    pinMode(SD_EN, OUTPUT);
 
     // Enable power to EPD
     digitalWrite(EPD_EN, LOW);
+    digitalWrite(EPD_RST, HIGH);
 
     display.init(115200);
     // first update should be full refresh
@@ -45,10 +48,10 @@ void setup()
     delay(3000);
     showPartialUpdate(display);
     delay(3000);
-    drawBitmaps(display);
-    delay(3000);
     showFont(display, "FreeMonoBold9pt7b", &FreeMonoBold9pt7b);
-
+    delay(3000);
+    drawBitmaps(display);
+    
     // Disable power to EPD
     digitalWrite(EPD_EN, HIGH);
 }
@@ -233,7 +236,7 @@ void showPartialUpdate(GxEPD2_GFX& display)
     display.fillScreen(GxEPD_WHITE);
     display.setCursor(x,y);
     display.print(text);
-    display.display();
+    display.display(false);
 
     // use asymmetric values for test
     uint16_t box_x = 10;
@@ -248,23 +251,19 @@ void showPartialUpdate(GxEPD2_GFX& display)
     // show where the update box is
     for (uint16_t r = 0; r < 4; r++)
     {
+        Serial.println("Starting black background");
         display.setRotation(r);
-        display.setPartialWindow(box_x, box_y, box_w, box_h);
-        display.firstPage();
-        do
-        {
-            display.fillRect(box_x, box_y, box_w, box_h, GxEPD_BLACK);
-            //display.fillScreen(GxEPD_BLACK);
-        }
-        while (display.nextPage());
-        delay(2000);
-        display.firstPage();
-        do
-        {
-            display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
-        }
-        while (display.nextPage());
-        delay(1000);
+        //display.setPartialWindow(box_x, box_y, box_w, box_h);
+        display.fillRect(box_x, box_y, box_w, box_h, GxEPD_BLACK);
+        //display.fillScreen(GxEPD_BLACK);
+        display.displayWindow(box_x, box_y, box_w, box_h);
+        Serial.println("Waiting for 10 secs after black.");
+        delay(10000);
+        Serial.println("Starting white background");
+        display.fillRect(box_x, box_y, box_w, box_h, GxEPD_WHITE);
+        display.displayWindow(box_x, box_y, box_w, box_h);
+        Serial.println("Waiting for 10 secs after white.");
+        delay(10000);
     }
     //return;
     // show updates in the update box
